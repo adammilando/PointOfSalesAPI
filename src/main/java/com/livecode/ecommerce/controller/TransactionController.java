@@ -5,6 +5,7 @@ import com.livecode.ecommerce.model.Request.SalesDetailRequest;
 import com.livecode.ecommerce.model.Response.SuccessResponse;
 import com.livecode.ecommerce.service.SalesDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +19,13 @@ public class TransactionController {
     private SalesDetailsService salesDetailsService;
 
     @GetMapping
-    public ResponseEntity getAllCategories() {
-        List<SaleDetail> saleDetails = salesDetailsService.getAll();
+    public ResponseEntity getAllCategories(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(defaultValue = "ASC") String direction,
+            @RequestParam(defaultValue = "id") String sort
+    ) {
+        Page<SaleDetail> saleDetails = salesDetailsService.getAll(page, size, direction, sort);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new SuccessResponse<>("Success Get All Categories", saleDetails));
     }

@@ -6,6 +6,10 @@ import com.livecode.ecommerce.model.Request.CategoryRequest;
 import com.livecode.ecommerce.repository.CategoryRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +23,13 @@ public class CategoryService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public List<Category> getAllCategory(){
+    public Page<Category> getAllCategory(
+            Integer page, Integer size,
+            String direction, String sort){
         try {
-            return categoryRepository.findAll();
+            Sort sortBy = Sort.by(Sort.Direction.valueOf(direction), sort);
+            Pageable pageable = PageRequest.of((page-1),size,sortBy);
+            return categoryRepository.findAll(pageable);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }

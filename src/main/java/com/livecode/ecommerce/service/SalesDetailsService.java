@@ -6,38 +6,45 @@ import com.livecode.ecommerce.model.Entities.Transaction;
 import com.livecode.ecommerce.model.Entities.SaleDetail;
 import com.livecode.ecommerce.model.Request.SalesDetailRequest;
 import com.livecode.ecommerce.repository.ProductRepository;
-import com.livecode.ecommerce.repository.SaleTrancationItemRepository;
-import com.livecode.ecommerce.repository.SaleTransactionRepository;
+import com.livecode.ecommerce.repository.SalesDetailRepository;
+import com.livecode.ecommerce.repository.TransactionRepository;
 import com.livecode.ecommerce.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 @Transactional
 public class SalesDetailsService {
-    private SaleTrancationItemRepository saleTrancationItemRepository;
+    private SalesDetailRepository salesDetailRepository;
     private ProductRepository productRepository;
     private UserRepository userRepository;
-    private SaleTransactionRepository saleTransactionRepository;
+    private TransactionRepository transactionRepository;
     private ModelMapper modelMapper;
 
     @Autowired
-    public SalesDetailsService(SaleTrancationItemRepository saleTrancationItemRepository, ProductRepository productRepository, UserRepository userRepository, SaleTransactionRepository saleTransactionRepository, ModelMapper modelMapper) {
-        this.saleTrancationItemRepository = saleTrancationItemRepository;
+    public SalesDetailsService(SalesDetailRepository salesDetailRepository, ProductRepository productRepository, UserRepository userRepository, TransactionRepository transactionRepository, ModelMapper modelMapper) {
+        this.salesDetailRepository = salesDetailRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
-        this.saleTransactionRepository = saleTransactionRepository;
+        this.transactionRepository = transactionRepository;
         this.modelMapper = modelMapper;
     }
 
-    public List<SaleDetail> getAll(){
+    public Page<SaleDetail> getAll(
+            Integer page,Integer size,
+            String direction,String sort){
         try {
-            return saleTrancationItemRepository.findAll();
+            Sort sortBy = Sort.by(Sort.Direction.valueOf(direction), sort);
+            Pageable pageable = PageRequest.of((page-1),size,sortBy);
+            return salesDetailRepository.findAll(pageable);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
@@ -45,7 +52,7 @@ public class SalesDetailsService {
 
     public SaleDetail getSalesById(Long id){
         try {
-            return saleTrancationItemRepository.findById(id)
+            return salesDetailRepository.findById(id)
                     .orElseThrow(() ->
                             new NotFoundException("Transaction With Id " + id + " Not Found"));
         }catch (Exception e){
@@ -59,10 +66,11 @@ public class SalesDetailsService {
             if (productOptional.isEmpty()){
                 throw new NotFoundException("Product Not Found");
             }
-            Optional<Transaction> saleTransaction = saleTransactionRepository.findById(salesDetailRequest.getTransaction());
+            Optional<Transaction> saleTransaction = transactionRepository.findById(salesDetailRequest.getTransaction());
             if (saleTransaction.isEmpty()){
                 throw new NotFoundException("Sales Not Found");
             }
+            SaleDetail transactionItem = modelMapper.map(salesDetailRequest, SaleDetail.class);
             Product product = productOptional.get();
             int currentStuck = product.getStock();
             int quantitySold = salesDetailRequest.getQuantity();
@@ -70,10 +78,9 @@ public class SalesDetailsService {
                 throw new RuntimeException("Insufficient Stock");
             }
             product.setStock(currentStuck-quantitySold);
-            SaleDetail transactionItem = modelMapper.map(salesDetailRequest, SaleDetail.class);
             transactionItem.setProduct(product);
             transactionItem.setTransaction(saleTransaction.get());
-            return saleTrancationItemRepository.save(transactionItem);
+            return salesDetailRepository.save(transactionItem);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
@@ -97,7 +104,7 @@ public class SalesDetailsService {
             saleDetail.setQuantity(quantitySold);
             saleDetail.setProduct(product);
             productRepository.save(product);
-            return saleTrancationItemRepository.save(saleDetail);
+            return salesDetailRepository.save(saleDetail);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
@@ -107,7 +114,7 @@ public class SalesDetailsService {
     public void deleteTransaction(Long id){
         try {
             SaleDetail saleDetail = getSalesById(id);
-            saleTrancationItemRepository.delete(saleDetail);
+            salesDetailRepository.delete(saleDetail);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }

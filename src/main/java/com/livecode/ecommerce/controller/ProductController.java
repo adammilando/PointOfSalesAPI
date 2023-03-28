@@ -5,6 +5,7 @@ import com.livecode.ecommerce.model.Request.ProductRequest;
 import com.livecode.ecommerce.model.Response.SuccessResponse;
 import com.livecode.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +19,13 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
-    public ResponseEntity getAllCategories() {
-        List<Product> product = productService.getAllProduct();
+    public ResponseEntity getAllCategories(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(defaultValue = "ASC") String direction,
+            @RequestParam(defaultValue = "id") String sort
+    ) {
+        Page<Product> product = productService.getAllProduct(page, size, direction, sort);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new SuccessResponse<>("Success Get All Products", product));
     }

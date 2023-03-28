@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Setter
 @Entity
 @Table(name = "transaction_tb")
+@Access(AccessType.FIELD)
 public class Transaction {
 
     @Id

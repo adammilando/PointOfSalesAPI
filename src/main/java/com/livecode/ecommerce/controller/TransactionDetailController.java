@@ -5,6 +5,7 @@ import com.livecode.ecommerce.model.Request.TransactionRequest;
 import com.livecode.ecommerce.model.Response.SuccessResponse;
 import com.livecode.ecommerce.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +19,13 @@ public class TransactionDetailController {
     private TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity getAllTransaction() {
-        List<Transaction> transactions = transactionService.getAllTransaction();
+    public ResponseEntity getAllTransaction(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "5") Integer size,
+            @RequestParam(defaultValue = "ASC") String direction,
+            @RequestParam(defaultValue = "id") String sort
+    ) {
+        Page<Transaction> transactions = transactionService.getAllTransaction(page, size, direction, sort);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new SuccessResponse<>("Success Get All detail", transactions));
     }
