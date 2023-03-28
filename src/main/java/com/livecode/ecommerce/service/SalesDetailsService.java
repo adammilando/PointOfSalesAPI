@@ -63,8 +63,15 @@ public class SalesDetailsService {
             if (saleTransaction.isEmpty()){
                 throw new NotFoundException("Sales Not Found");
             }
+            Product product = productOptional.get();
+            int currentStuck = product.getStock();
+            int quantitySold = salesDetailRequest.getQuantity();
+            if (currentStuck < quantitySold){
+                throw new RuntimeException("Insufficient Stock");
+            }
+            product.setStock(currentStuck-quantitySold);
             SaleDetail transactionItem = modelMapper.map(salesDetailRequest, SaleDetail.class);
-            transactionItem.setProduct(productOptional.get());
+            transactionItem.setProduct(product);
             transactionItem.setTransaction(saleTransaction.get());
             return saleTrancationItemRepository.save(transactionItem);
         }catch (Exception e){
@@ -75,15 +82,27 @@ public class SalesDetailsService {
     public SaleDetail updateTransaction(Long id, SalesDetailRequest salesDetailRequest){
         try {
             SaleDetail saleDetail = getSalesById(id);
-            saleDetail.setQuantity(salesDetailRequest.getQuantity());
-
-            Product product = new Product();
+            Optional<Product> productOptional = productRepository.findById(salesDetailRequest.getProduct());
+            if (productOptional.isEmpty()){
+                throw new NotFoundException("Product Not Found");
+            }
+            Product product = productOptional.get();
+            int currentStock = product.getStock();
+            int quantitySold = salesDetailRequest.getQuantity();
+            int difference = saleDetail.getQuantity() - quantitySold;
+            if (currentStock + difference < 0) {
+                throw new RuntimeException("Insufficient stock");
+            }
+            product.setStock(currentStock + difference);
+            saleDetail.setQuantity(quantitySold);
             saleDetail.setProduct(product);
+            productRepository.save(product);
             return saleTrancationItemRepository.save(saleDetail);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
     }
+
 
     public void deleteTransaction(Long id){
         try {
