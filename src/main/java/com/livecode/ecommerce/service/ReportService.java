@@ -1,10 +1,12 @@
 package com.livecode.ecommerce.service;
 
+import com.livecode.ecommerce.model.Entities.Price;
 import com.livecode.ecommerce.model.Entities.Product;
 import com.livecode.ecommerce.model.Entities.SaleDetail;
 import com.livecode.ecommerce.model.Entities.Transaction;
 import com.livecode.ecommerce.model.Request.DailySalesReportRequest;
 import com.livecode.ecommerce.model.Request.MontlySalesRepostRequest;
+import com.livecode.ecommerce.repository.PriceRepository;
 import com.livecode.ecommerce.repository.SalesDetailRepository;
 import com.livecode.ecommerce.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,35 +29,46 @@ public class ReportService {
 
     private SalesDetailRepository salesDetailRepository;
 
+    private PriceRepository priceRepository;
+
     @Autowired
-    public ReportService(TransactionRepository transactionRepository, SalesDetailRepository salesDetailRepository) {
+    public ReportService(TransactionRepository transactionRepository, SalesDetailRepository salesDetailRepository, PriceRepository priceRepository) {
         this.transactionRepository = transactionRepository;
         this.salesDetailRepository = salesDetailRepository;
+        this.priceRepository = priceRepository;
     }
 
-    public Page<DailySalesReportRequest> getDailySaleReport(LocalDate date,Integer page,Integer size, String direction, String sort) {
+    public Page<DailySalesReportRequest> getDailySaleReport(LocalDate date, Integer page, Integer size, String direction, String sort) {
         try {
             Sort sortby = Sort.by(Sort.Direction.valueOf(direction), sort);
             Pageable pageable = PageRequest.of(page, size, sortby);
             List<Transaction> transactions = transactionRepository.findByTimesTamp(date);
-            Page<SaleDetail> saleDetails = salesDetailRepository.findByTransactionIn(transactions,pageable);
+            Page<SaleDetail> saleDetails = salesDetailRepository.findByTransactionIn(transactions, pageable);
 
             Map<Long, DailySalesReportRequest> reportMap = new HashMap<>();
 
             for (SaleDetail saleDetail : saleDetails) {
                 Product product = saleDetail.getProduct();
+                List<Price> prices = product.getPrice();
+                Price price = null;
+                for (Price p : prices) {
+                    if (p.getValidFrom() != null && !p.getValidFrom().isAfter(date) && (p.getValidTo() == null || !p.getValidTo().isBefore(date))) {
+                        price = p;
+                        break;
+                    }
+                }
                 DailySalesReportRequest report = reportMap.getOrDefault(product.getId(), new DailySalesReportRequest());
                 report.setDate(date);
                 report.setProductId(product.getId());
                 report.setProductName(product.getName());
                 report.setQtySold(report.getQtySold() + saleDetail.getQuantity());
-                report.setTotalAmount(report.getTotalAmount().add(saleDetail.getProduct().getPrice().multiply(BigDecimal.valueOf(saleDetail.getQuantity()))));
+                report.setTotalAmount(report.getTotalAmount().add(price.getPrice().multiply(BigDecimal.valueOf(saleDetail.getQuantity()))));
                 reportMap.put(product.getId(), report);
             }
 
             List<DailySalesReportRequest> reportList = new ArrayList<>(reportMap.values());
             return new PageImpl<>(reportList, pageable, reportList.size());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -74,13 +87,14 @@ public class ReportService {
 
             for (SaleDetail saleDetail : saleDetails) {
                 Product product = saleDetail.getProduct();
+                Price price = priceRepository.findByProduct(product);
                 MontlySalesRepostRequest report = reportMap.getOrDefault(product.getId(), new MontlySalesRepostRequest());
                 report.setMonth(month);
                 report.setYear(year);
                 report.setProductId(product.getId());
                 report.setProductName(product.getName());
                 report.setQuantitySold(report.getQuantitySold() + saleDetail.getQuantity());
-                report.setTotalAmount(report.getTotalAmount().add(saleDetail.getProduct().getPrice().multiply(BigDecimal.valueOf(saleDetail.getQuantity()))));
+                report.setTotalAmount(report.getTotalAmount().add(price.getPrice().multiply(BigDecimal.valueOf(saleDetail.getQuantity()))));
                 reportMap.put(product.getId(), report);
             }
             List<MontlySalesRepostRequest> reportList = new ArrayList<>(reportMap.values());

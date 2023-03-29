@@ -1,60 +1,58 @@
 package com.livecode.ecommerce.controller;
 
-import com.livecode.ecommerce.model.Entities.SaleDetail;
-import com.livecode.ecommerce.model.Request.SalesDetailRequest;
+import com.livecode.ecommerce.model.Entities.Transaction;
+import com.livecode.ecommerce.model.Request.TransactionRequest;
 import com.livecode.ecommerce.model.Response.SuccessResponse;
-import com.livecode.ecommerce.service.SalesDetailsService;
+import com.livecode.ecommerce.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/transaction/")
+@RequestMapping("/api/detail")
 public class TransactionController {
     @Autowired
-    private SalesDetailsService salesDetailsService;
+    private TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity getAllCategories(
+    public ResponseEntity getAllTransaction(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "5") Integer size,
             @RequestParam(defaultValue = "ASC") String direction,
             @RequestParam(defaultValue = "id") String sort
     ) {
-        Page<SaleDetail> saleDetails = salesDetailsService.getAll(page, size, direction, sort);
+        Page<Transaction> transactions = transactionService.getAllTransaction(page, size, direction, sort);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new SuccessResponse<>("Success Get All Categories", saleDetails));
+                .body(new SuccessResponse<>("Success Get All detail", transactions));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getCategoryById(@PathVariable Long id) {
-        SaleDetail salesById = salesDetailsService.getSalesById(id);
+    public ResponseEntity getTransactionById(@PathVariable Long id) {
+        Transaction transaction = transactionService.getTransactionById(id);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new SuccessResponse<>("Success find Categories with id "+id, salesById));
+                .body(new SuccessResponse<>("Success Get transaction With Id "+ id, transaction));
     }
 
     @PostMapping
-    public ResponseEntity createCategory(@RequestBody SalesDetailRequest salesDetailRequest) {
-        SaleDetail saleDetail = salesDetailsService.createTransaction(salesDetailRequest);
+    public ResponseEntity createReport(@RequestBody TransactionRequest saleTransactionRequest) {
+        Transaction transaction = transactionService.createTransaction(saleTransactionRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponse<>("Success Creating Categories", saleDetail));
+                .body(new SuccessResponse<>("Success Creating Detail Transaction", transaction));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity updateCategory(@PathVariable Long id, @RequestBody SalesDetailRequest salesDetailRequest) {
-        SaleDetail saleDetail = salesDetailsService.updateTransaction(id, salesDetailRequest);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new SuccessResponse<>("Success Updating Category", saleDetail));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity deleteCategory(@PathVariable Long id) {
-        salesDetailsService.deleteTransaction(id);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new SuccessResponse<>("Success deleting Category With Id "+ id, null));
-    }
+//    @GetMapping("/daily")
+//    public ResponseEntity getDailyReport(@RequestParam ("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateTime) {
+//        List<Transaction> transactions = transactionService.getDailyReport(dateTime);
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(new SuccessResponse<>("Success get Daily report", transactions));
+//    }
+//
+//    @GetMapping("/monthly")
+//    public ResponseEntity getMonthlyReport(@RequestParam int month, @RequestParam int year) {
+//        List<Transaction> transactions = transactionService.getMonthlyReport(month, year);
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(new SuccessResponse<>("Success Get Monthly report", transactions));
+//    }
 }

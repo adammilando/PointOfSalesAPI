@@ -70,7 +70,6 @@ public class ProductService {
             Product product = getProductById(id);
             product.setName(productDetail.getName());
             product.setDescription(productDetail.getDescription());
-            product.setPrice(productDetail.getPrice());
             product.setStock(productDetail.getStock());
 
             Category category = new Category();

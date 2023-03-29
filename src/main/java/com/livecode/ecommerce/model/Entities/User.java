@@ -2,7 +2,9 @@ package com.livecode.ecommerce.model.Entities;
 
 import com.livecode.ecommerce.utils.Role;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;
@@ -12,6 +14,8 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "user_tb")
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -26,7 +30,13 @@ public class User {
     @JoinColumn(name = "email", referencedColumnName = "email")
     private Auth auth;
 
-//    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    public User(String userName, String phone, Auth auth) {
+        this.userName = userName;
+        this.phone = phone;
+        this.auth = auth;
+    }
+
+    //    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
 //    @CollectionTable(name = "user_roles",
 //    joinColumns =
 //    @JoinColumn(name = "user_id"))
