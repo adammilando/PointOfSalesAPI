@@ -14,7 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
@@ -59,7 +61,7 @@ public class AuthServiceTest {
         when(modelMapper.map(registerRequest, Auth.class)).thenReturn(auth);
         when(authRepository.save(auth)).thenReturn(auth);
         when(modelMapper.map(registerRequest, User.class)).thenReturn(user);
-        doNothing().when(userService).createUser(user);
+        when(userService.createUser(user)).thenReturn(user);
         when(jwtUtil.generateToken(user.getAuth().getEmail())).thenReturn("sample_token");
 
         String token = authService.register(registerRequest);
@@ -70,7 +72,7 @@ public class AuthServiceTest {
     @Test
     public void testRegister_DataAccessException() {
         when(modelMapper.map(registerRequest, Auth.class)).thenReturn(auth);
-        when(authRepository.save(auth)).thenThrow(DataAccessException.class);
+        when(authRepository.save(auth)).thenThrow(DataIntegrityViolationException.class);
 
         assertThrows(EntityExistsException.class, () -> authService.register(registerRequest));
     }

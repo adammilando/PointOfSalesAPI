@@ -1,5 +1,4 @@
 package com.livecode.ecommerce.model.Entities;
-import com.livecode.ecommerce.model.Entities.Price;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,9 +18,8 @@ public class Product {
     private String name;
     private String description;
     private int stock;
-    @OneToMany
-    @JoinColumn(name = "price_id")
-    private List<Price> price;
+
+    private BigDecimal price;
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
