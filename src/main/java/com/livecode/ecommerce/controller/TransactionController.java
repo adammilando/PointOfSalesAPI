@@ -36,23 +36,23 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity createReport(@RequestBody TransactionRequest saleTransactionRequest) {
+    public ResponseEntity createTransaction(@RequestBody TransactionRequest saleTransactionRequest) {
         Transaction transaction = transactionService.createTransaction(saleTransactionRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponse<>("Success Creating Detail Transaction", transaction));
     }
 
-//    @GetMapping("/daily")
-//    public ResponseEntity getDailyReport(@RequestParam ("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateTime) {
-//        List<Transaction> transactions = transactionService.getDailyReport(dateTime);
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(new SuccessResponse<>("Success get Daily report", transactions));
-//    }
-//
-//    @GetMapping("/monthly")
-//    public ResponseEntity getMonthlyReport(@RequestParam int month, @RequestParam int year) {
-//        List<Transaction> transactions = transactionService.getMonthlyReport(month, year);
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(new SuccessResponse<>("Success Get Monthly report", transactions));
-//    }
+    @PutMapping("/{id}")
+    public ResponseEntity updateTransaction(@PathVariable Long id, @RequestBody TransactionRequest transactionRequest) {
+        Transaction transaction = transactionService.updateTransaction(id, transactionRequest);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new SuccessResponse<>("Success Updating Transaction", transaction));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteCategory(@PathVariable Long id) {
+        transactionService.deleteTransaction(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new SuccessResponse<>("Success deleting Transaction With Id "+ id, null));
+    }
 }

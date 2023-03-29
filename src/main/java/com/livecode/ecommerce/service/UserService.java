@@ -8,6 +8,10 @@ import com.livecode.ecommerce.model.Request.UserRequest;
 import com.livecode.ecommerce.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +24,14 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public List<User> getAllUser(){
+    public Page<User> getAllUser(
+            Integer page,Integer size,
+            String direction,String sort
+    ){
         try {
-            return userRepository.findAll();
+            Sort sortBy = Sort.by(Sort.Direction.valueOf(direction), sort);
+            Pageable pageable = PageRequest.of((page-1),size,sortBy);
+            return userRepository.findAll(pageable);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
         }
@@ -50,6 +59,7 @@ public class UserService {
         try {
             User user = getUserById(id);
             user.setUserName(userRequest.getUserName());
+            user.setPhone(userRequest.getPhone());
             return userRepository.save(user);
         }catch (Exception e){
             throw new RuntimeException(e.getMessage());
